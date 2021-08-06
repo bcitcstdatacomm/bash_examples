@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+clear
 STRINGS=("Hello" "World")
 
 for STR in ${STRINGS[*]}
