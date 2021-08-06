@@ -11,7 +11,6 @@ function error_handler()
   [ $STATUS -eq 0 ] && exit 0
 
   echo "Error handler, exit status: $STATUS"
-
   exit 2
 }
 
