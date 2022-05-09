@@ -20,7 +20,8 @@ function is_integer()
 
 function usage()
 {
-  echo "Usage: alphabet [ -c | --count <# of times to display the message> ]
+  SCRIPT_NAME=`basename "$0"`
+  echo "Usage: $SCRIPT_NAME [ -c | --count <# of times to display the message> ]
                         [ -d | --delay <delay between display in seconds> ] message(s)"
   exit 2
 }
