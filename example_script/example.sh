@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+function parse_args()
+{
+  SHORT_FLAGS="c:d:"
+  COUNT=1
+  DELAY=0
+  while getopts $SHORT_FLAGS: name
+  do
+    case "$name" in
+      c)  COUNT="$OPTARG" ;;
+      d)  DELAY="$OPTARG" ;;
+      ?)  usage ;;
+    esac
+  done
+
+  shift $(($OPTIND - 1))
+  UNNAMED_PARAMETERS=("$*")
+}
+
 function is_variable_set()
 {
   if [ -n "$1" ]; then
@@ -20,72 +38,55 @@ function is_integer()
 
 function usage()
 {
-  SCRIPT_NAME=`basename "$0"`
-  echo "Usage: $SCRIPT_NAME [ -c | --count <# of times to display the message> ]
-                        [ -d | --delay <delay between display in seconds> ] message(s)"
+  if [ "$#" -eq 1 ]; then
+    printf "ERROR: %s\n\n" "$1"
+  fi
+
+  SCRIPT_NAME=$(basename "$0")
+  echo "Usage: $SCRIPT_NAME [ -c <# of times to display the message> ]
+                  [ -d <delay between display in seconds> ]
+                  message(s)"
   exit 2
 }
 
 function check_arguments()
 {
-  if is_variable_set "$COUNT"; then
-    if ! is_integer "$COUNT"; then
-      usage
-    fi
+  if ! is_variable_set "$COUNT"; then
+    usage "-c missing"
   fi
 
-  if is_variable_set "$DELAY"; then
-    if ! is_integer "$DELAY"; then
-      usage
-    fi
+  if ! is_integer "$COUNT"; then
+    usage "the value to -c must be an integer"
+  fi
+
+  if ! is_variable_set "$DELAY"; then
+    usage "-d missing"
+  fi
+
+  if ! is_integer "$DELAY"; then
+    usage "the value to -d must be an integer"
   fi
 
   if ! is_variable_set "$UNNAMED_PARAMETERS"; then
-    usage
+    usage "the messages must be passed"
   fi
 }
 
 function main()
 {
-  COUNT=1
-  DELAY=0
-  eval set -- "$PARSED_ARGUMENTS"
-
-  while :
+  for (( i=1; i<=$1; i++ ))
   do
-    case "$1" in
-      -c | --count) COUNT="$2" ; shift 2 ;;
-      -d | --delay) DELAY="$2" ; shift 2 ;;
-      --) shift; break ;;
-      *) echo "Unexpected option: $1 - check getopts argument"
-         usage ;;
-    esac
-  done
-
-  UNNAMED_PARAMETERS=("$@")
-
-  check_arguments
-
-  for (( i=1; i<=$COUNT; i++ ))
-  do
-    for message in "${UNNAMED_PARAMETERS[@]}"
+    for message in $3
     do
       echo "$message"
     done
 
-    if [ "$i" -lt "$COUNT" ]; then
-      sleep "$DELAY"
+    if [ "$i" -lt "$1" ]; then
+      sleep "$2"
     fi
   done
 }
 
-SHORT_FLAGS="c:d:"
-LONG_FLAGS="count:,delay:"
-PARSED_ARGUMENTS=$(getopt -a -n alphabet -o $SHORT_FLAGS --long $LONG_FLAGS -- "$@")
-VALID_ARGUMENTS=$?
-
-if [ "$VALID_ARGUMENTS" != "0" ]; then
-  usage
-fi
-
-main "$PARSED_ARGUMENTS"
+parse_args "$@"
+check_arguments
+main "$COUNT" "$DELAY" "${UNNAMED_PARAMETERS[@]}"
